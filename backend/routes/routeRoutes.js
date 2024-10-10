@@ -7,6 +7,9 @@ const {
   getAllRoutes,
   deleteRoute,
   assignCollectorToRoute,
+  getAllAssignedRoutes,
+  getAssignedCollectorForRoute,
+  deleteCollectorFromRoute
 } = require('../controllers/routeController'); // Ensure this path is correct
 
 // Route to add a new route
@@ -25,5 +28,11 @@ router.get('/allroutes', getAllRoutes);
 router.delete('/deleteroutes/:routeId', deleteRoute);
 
 router.post('/assignCollector', assignCollectorToRoute);
+
+router.get('/assigned/:routeId', getAssignedCollectorForRoute); // Get assigned collector for a route
+router.delete('/delete/:routeId', deleteCollectorFromRoute); // Delete collector assignment from route
+
+// Define the route for fetching all assigned routes
+router.get("/allAssignedRoutes", getAllAssignedRoutes);
 
 module.exports = router;

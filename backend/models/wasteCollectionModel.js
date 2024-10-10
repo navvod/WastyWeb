@@ -33,6 +33,10 @@ const wasteCollectionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    payment: {
+        type: Number, // Store the calculated payment for this collection
+        required: true,
+      },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt timestamps

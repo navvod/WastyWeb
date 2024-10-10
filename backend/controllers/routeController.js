@@ -150,6 +150,81 @@ const assignCollectorToRoute = expressAsyncHandler(async (req, res) => {
   }
 });
 
+const getAssignedCollectorForRoute = expressAsyncHandler(async (req, res) => {
+  const { routeId } = req.params;
+
+  try {
+    // Find the route with the assigned collector
+    const route = await Route.findOne({ routeId })
+      .populate("collectorId", "Id fullName contactNumber") // Populate the collector details
+      .select("routeId collectorId");
+
+    if (!route) {
+      return res.status(404).json({ error: "Route not found" });
+    }
+
+    res.status(200).json({
+      routeId: route.routeId,
+      collectorId: route.collectorId ? route.collectorId.Id : null,
+      fullName: route.collectorId ? route.collectorId.fullName : null,
+      contactNumber: route.collectorId ? route.collectorId.contactNumber : null,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch assigned collector" });
+  }
+});
+
+const deleteCollectorFromRoute = expressAsyncHandler(async (req, res) => {
+  const { routeId } = req.params;
+
+  try {
+    // Find the route
+    const route = await Route.findOne({ routeId });
+    if (!route) {
+      return res.status(404).json({ error: "Route not found" });
+    }
+
+    // Remove the collector assignment
+    route.collectorId = null; // Assuming you want to clear the assignment
+    await route.save();
+
+    res.status(200).json({ message: "Collector assignment removed successfully", route });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to remove collector from route" });
+  }
+});
+
+
+const getAllAssignedRoutes = expressAsyncHandler(async (req, res) => {
+  try {
+    // Fetch all routes with assigned collectors
+    const assignedRoutes = await Route.find({ collectorId: { $exists: true, $ne: null } })
+      .select("routeId collectorId"); // Only select the fields you need
+
+    if (!assignedRoutes.length) {
+      return res.status(404).json({ message: "No assigned routes found" });
+    }
+
+    // Manually retrieve user details for each assigned route based on the Id field
+    const response = await Promise.all(assignedRoutes.map(async (route) => {
+      const collector = await User.findOne({ Id: route.collectorId }).select("Id fullName contactNumber"); // Use findOne to match the Id string
+      return {
+        routeId: route.routeId,
+        collectorId: collector ? collector.Id : null,
+        fullName: collector ? collector.fullName : null,
+        contactNumber: collector ? collector.contactNumber : null,
+      };
+    }));
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Error fetching assigned routes:", error);
+    res.status(500).json({ error: "Failed to fetch assigned routes" });
+  }
+});
+
 
 
 
@@ -161,5 +236,8 @@ module.exports = {
   getRouteById,
   getAllRoutes,
   deleteRoute,
-  assignCollectorToRoute
+  assignCollectorToRoute,
+  getAssignedCollectorForRoute,
+  deleteCollectorFromRoute,
+  getAllAssignedRoutes,
 };

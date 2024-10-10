@@ -51,7 +51,7 @@ router.get("/", getAllUsers);
 router.get("/allcustomers", getAllCustomers);
 
 // Get all managers
-router.get("/allmanagers", getAllCollectors);
+router.get("/allCollectors", getAllCollectors);
 
 // Get all admins
 router.get("/allAdmins", getAllAdmins);

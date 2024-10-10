@@ -1,17 +1,19 @@
 
 const express = require("express");
-const {getRecyclableVsNonRecyclableWaste, getWasteCollectedByRegion ,getWasteCollectedOverTime ,generateRecyclingRateReport ,submitWasteCollection, calculatePayment, calculateMonthlyPayment,generateCollectionReport,generateHighWasteAreasReport } = require("../controllers/wasteCollectionController.js");
+const {getAllWasteCollections,getRecyclableVsNonRecyclableWaste, getWasteCollectedByRegion ,getWasteCollectedOverTime ,generateRecyclingRateReport ,submitWasteCollection, viewSingleCollectionPayment, calculateMonthlyCollectionDetails,generateCollectionReport,generateHighWasteAreasReport } = require("../controllers/wasteCollectionController.js");
 
 const router = express.Router();
 
 // Route to submit waste collection
 router.post("/submitWaste", submitWasteCollection);
 
+router.get('/collection/all', getAllWasteCollections); // Route for getting all collections
+
 // Admin route to calculate payment for a user
-router.get("/calculatePayment/:userId", calculatePayment);
+router.get("/payment/viewSingleCollectionPayment/:userId/:collectionId", viewSingleCollectionPayment);
 
 
-router.get('/calculate-monthly-payment/:userId/:month/:year', calculateMonthlyPayment);
+router.get('/payment/calculate-monthly-payment/:userId/:month/:year', calculateMonthlyCollectionDetails);
 
 // Route for generating collection reports (daily, weekly, monthly)
 router.get("/wasteCollection/report", generateCollectionReport);
@@ -20,7 +22,7 @@ router.get("/wasteCollection/report", generateCollectionReport);
 router.post('/wasteCollection/recyclingRateReport', generateRecyclingRateReport);
 
 // Define the endpoint for the high waste areas report
-router.post("/wasteCollection/highWasteAreasReport", generateHighWasteAreasReport);
+router.get("/wasteCollection/highWasteAreasReport", generateHighWasteAreasReport);
 
 
 // Define the route to fetch waste data over time
