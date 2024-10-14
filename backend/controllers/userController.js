@@ -516,58 +516,55 @@ const updateAdmin = async (req, res) => {
 };
 
 const updateCollector = async (req, res) => {
-  const collectorId = req.params.Id;
+  const collectorId = req.params.Id; // This should be the MongoDB ObjectId
   const { fullName, contactNumber, username, email, password } = req.body;
 
   try {
-    // Check if all required fields are present
+    // Validate required fields
     if (!fullName || !contactNumber || !username || !email || !password) {
       return res.status(400).json({ error: "Please include all fields" });
     }
 
-    // Check if email is valid
+    // Validate email format
     if (!validator.isEmail(email)) {
       return res.status(400).json({ error: "Email is not valid" });
     }
 
-    // Check if password is at least 6 characters long
+    // Check password length
     if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ error: "Password must be at least 6 characters long" });
+      return res.status(400).json({ error: "Password must be at least 6 characters long" });
     }
 
-    // Check if contact number is exactly 10 digits
+    // Validate contact number
     if (!/^\d{10}$/.test(contactNumber)) {
-      return res
-        .status(400)
-        .json({ error: "Contact number must contain exactly 10 digits" });
+      return res.status(400).json({ error: "Contact number must contain exactly 10 digits" });
     }
 
-    // Find the collector by generated ID
-    const collector = await User.findOne({ Id: collectorId });
+    // Find the collector using the MongoDB _id field
+    const collector = await User.findById(collectorId);
 
-    // Check if collector exists
+    // Handle collector not found
     if (!collector || collector.role !== "Collector") {
       return res.status(404).json({ error: "Collector not found" });
     }
 
-    // Update collector fields
-    if (fullName) collector.fullName = fullName;
-    if (contactNumber) collector.contactNumber = contactNumber;
-    if (username) collector.username = username;
-    if (email) collector.email = email;
+    // Update fields if collector is found
+    collector.fullName = fullName;
+    collector.contactNumber = contactNumber;
+    collector.username = username;
+    collector.email = email;
+
     if (password) {
-      // Hash and update password
+      // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
       collector.password = hashedPassword;
     }
 
-    // Save updated collector
+    // Save updates
     await collector.save();
 
     res.status(200).json({
-      id: collector.Id,
+      id: collector._id,
       fullName: collector.fullName,
       contactNumber: collector.contactNumber,
       username: collector.username,
@@ -575,19 +572,20 @@ const updateCollector = async (req, res) => {
       role: collector.role,
       message: "Collector details updated successfully",
     });
+
   } catch (error) {
-    console.error(error);
+    console.error("Error in updateCollector:", error);
     res.status(500).json({ error: "Failed to update collector details" });
   }
 };
 
 
 const deleteUser = async (req, res) => {
-  const userId = req.params.id;
+  const userId = req.params.id; // This should be the MongoDB _id
 
   try {
-    // Find the user by generated ID and role, then delete
-    const deletedUser = await User.findOneAndDelete({ Id: userId });
+    // Find the user by MongoDB _id and delete
+    const deletedUser = await User.findByIdAndDelete(userId);
 
     if (!deletedUser) {
       return res.status(404).json({ error: "User not found" });
@@ -600,6 +598,7 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ error: "Failed to delete user" });
   }
 };
+
 
 const getAllCustomers = async (req, res) => {
   try {

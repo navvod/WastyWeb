@@ -12,6 +12,9 @@ import EditAdmin from "./pages/admin/EditAdmin";
 import CollectorRegister from "./pages/collector/CollectorRegister";
 import CollectorList from "./pages/collector/CollectorList";
 import EditCollector from "./pages/collector/EditCollector";
+import Sidebar from "./components/AdminSidebar";
+import CustomerList from './pages/admin/CustomerList'
+import CustomerApproval from './pages/admin/CustomerApproval'
 
 
 //RouteManagement
@@ -24,6 +27,7 @@ import AllAssignedRoute from "./pages/routeManagement/AllAssignedRoutes";
 //Collection
 import CollectionHome from "./pages/payment/CollectionHome";
 import SinglePayment from "./pages/payment/SinglePayment"
+import ViewSinglePayment from "./pages/payment/ViewSinglePayment"
 import MonthlyPayment from "./pages/payment/MonthlyPayment"
 
 
@@ -32,6 +36,12 @@ import ReportHome from "./pages/report/ReportHome";
 import CollectionReport from "./pages/report/CollectionReportPage";
 import HighWasteReport from "./pages/report/HighWasteAreasReportPage";
 import RecyclingReport from "./pages/report/RecyclingRateReportPage"
+
+//Customer
+import CustomerRegister from "./pages/customer/Registration";
+import CustomerLogin from './pages/customer/Login';
+import CustomerDashboard from './pages/customer/Dashboard';
+import CustSide from './components/customer/sucsidebar'
 
 
 import Charts from "./pages/charts/ChartsPage"
@@ -51,11 +61,21 @@ function App() {
        {/* Admin and Collector  */}
       <Route path="/user/register-admin" element={<AdminRegister />} />
       <Route path="/user/allAdmins" element={<AdminList />} />
-      <Route path="/user/update-admin/:Id" element={<EditAdmin />} />
+      {/* <Route path="/user/update-admin/:Id" element={<EditAdmin />} /> */}
 
       <Route path="/user/register-collector" element={<CollectorRegister />} />
       <Route path="/user/allcollectors" element={<CollectorList />} />
       <Route path="/user/update-collector/:Id" element={<EditCollector />} />
+      <Route path="/user/sidebar" element={<Sidebar />} />
+
+      <Route path="/user/customers" element={<CustomerList />}/>
+      <Route path="/user/customer-approval" element={<CustomerApproval />} />
+
+
+
+
+
+
 
        {/* Route Management  */}
       <Route path="/Test" element={<Test />} />
@@ -65,10 +85,14 @@ function App() {
       <Route path="/routeManagement/ALlAssignedRoutes" element={<AllAssignedRoute />} />
       <Route path="/routeManagement/UpdateRoute/:id" element={<UpdateRoute />} />
 
+      {/* Collection Management  */}
+      <Route path="/collection/AllCollection" element={<CollectionHome />} />
+
+
 
       {/* Payment Management  */}
-      <Route path="/payments/AllCollection" element={<CollectionHome />} />
-      <Route path="/payment/viewSingleCollectionPayment/:userId/:collectionId" element={<SinglePayment />} />
+       <Route path="/payments/SingleCollectionPayment" element={<SinglePayment />} /> 
+      <Route path="/payment/viewSingleCollectionPayment/:userId/:collectionId" element={<ViewSinglePayment />} />
       <Route path="/payment/MonthlyPayment" element={<MonthlyPayment />} />
 
 
@@ -80,6 +104,18 @@ function App() {
 
      {/* Charts  */}
      <Route path="/charts/chartsHome" element={<Charts />}/>
+
+
+
+    {/* Customer  */}
+    <Route path="/customer/register" element={<CustomerRegister />}/>
+    <Route path="/customer/login" element={<CustomerLogin />}/>
+    <Route path="/customer/dashboard" element={<CustomerDashboard />}/>
+    
+    <Route path="/customer/CustSide" element={<CustSide />}/>
+
+
+
 
       </Routes>
       </BrowserRouter>

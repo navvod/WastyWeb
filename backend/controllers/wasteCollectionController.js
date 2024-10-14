@@ -1,185 +1,184 @@
 // controllers/WasteCollectionController.js
 const WasteCollection = require("../models/wasteCollectionModel.js");
 const User = require("../models/userModel.js");
+const Customer = require("../models/customerModel.js");
+const mongoose = require("mongoose");
+
 
 // Function to submit waste collection
 const submitWasteCollection = async (req, res) => {
-    const { userId, collectorId, wasteQty, recyclableQty, region } = req.body;
-  
-    try {
-      // Validate input
-      if (!userId || !collectorId || !wasteQty || recyclableQty === undefined || !region) {
-        return res.status(400).json({ error: "Please include all required fields" });
-      }
-  
-      // Find the user by custom Id field
-      const user = await User.findOne({ Id: userId });
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-  
-      // Find the collector by custom Id field and check if the role is 'Collector'
-      const collector = await User.findOne({ Id: collectorId, role: "Collector" });
-      if (!collector) {
-        return res.status(404).json({ error: "Collector not found or is not a collector" });
-      }
-  
-      // Calculate payment based on waste and recyclable quantity
-      const calculatePayment = (wasteQty, recyclableQty) => {
-        const nonRecyclableRate = 5; // $5 per kg for non-recyclable waste
-        const recyclableRate = 10; // $10 per kg for recyclable waste
-        return (wasteQty * nonRecyclableRate) + (recyclableQty * recyclableRate);
-      };
-  
-      const payment = calculatePayment(wasteQty, recyclableQty); // Calculate total payment
-  
-      // Create a new waste collection entry
-      const wasteCollection = new WasteCollection({
-        userId: user._id, // Using MongoDB's ObjectId for user reference
-        collectorId: collector._id, // Using MongoDB's ObjectId for collector reference
-        wasteQty,
-        recyclableQty,
-        customerId: userId, // Save the custom customer ID
-        region, // Save the region
-        payment, // Store the calculated payment
-      });
-  
-      // Save waste collection entry
-      await wasteCollection.save();
-  
-      res.status(200).json({
-        message: "Waste collection submitted successfully",
-        collectionId: wasteCollection._id, // Include the collection ID in the response
-        user: {
-          id: user.Id,
-          fullName: user.fullName,
-          wasteQty,
-          recyclableQty,
-          region,
-          collectionDate: wasteCollection.collectionDate, // Auto-saved collection date
-          payment, // Return the payment information
-        },
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Failed to submit waste collection" });
-    }
-  };
-
-  const getAllWasteCollections = async (req, res) => {
-    try {
-      // Fetch all waste collection entries from the database
-      const collections = await WasteCollection.find().populate('userId', 'fullName') // Populating user details
-                                                  .populate('collectorId', 'fullName'); // Populating collector details
-  
-      // Check if any collections were found
-      if (!collections.length) {
-        return res.status(404).json({ message: "No waste collections found" });
-      }
-  
-      // Return the collections
-      res.status(200).json(collections);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Failed to fetch waste collections" });
-    }
-  };
-
-// Function to calculate payment based on waste collected
-const viewSingleCollectionPayment = async (req, res) => {
-  const { userId, collectionId } = req.params; // Get userId and collectionId from the request parameters
+  const { customerId, collectorId, wasteQty, recyclableQty, region } = req.body;
 
   try {
-    // Find the specific waste collection using the correct query
-    const wasteRecord = await WasteCollection.findOne({
-      userId: userId, // Use userId for the query
-      _id: collectionId
-    });
-
-    if (!wasteRecord) {
-      return res.status(404).json({ error: "No waste collection record found for this user with the specified collection ID" });
+    if (!customerId || !collectorId || !wasteQty || recyclableQty === undefined || !region) {
+      return res.status(400).json({ error: "Please include all required fields" });
     }
 
-    // Respond with the specific collection's details and the previously saved payment
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    const collector = await User.findOne({ Id: collectorId, role: "Collector" });
+    if (!collector) {
+      return res.status(404).json({ error: "Collector not found or is not a collector" });
+    }
+
+    const calculatePayment = (wasteQty, recyclableQty) => {
+      const nonRecyclableRate = 5;
+      const recyclableRate = 10;
+      return (wasteQty * nonRecyclableRate) + (recyclableQty * recyclableRate);
+    };
+    const payment = calculatePayment(wasteQty, recyclableQty);
+
+    const wasteCollection = new WasteCollection({
+      customerId: customer._id,
+      collectorId: collector._id,
+      wasteQty,
+      recyclableQty,
+      region,
+      payment,
+    });
+
+    await wasteCollection.save();
+
     res.status(200).json({
-      message: "Waste collection payment retrieved successfully",
-      collectionId: wasteRecord._id, // Collection ID
-      collectionDateTime: wasteRecord.collectionDate, // Collection date and time
-      wasteQty: wasteRecord.wasteQty, // Waste quantity
-      recyclableQty: wasteRecord.recyclableQty, // Recyclable quantity
-      payment: wasteRecord.payment, // Fetch the already stored payment for this collection
-      customerId: wasteRecord.customerId // Optional: include customerId if needed
+      message: "Waste collection submitted successfully",
+      collectionId: wasteCollection._id,
+      user: {
+        id: customer._id,
+        fullName: customer.name,
+        wasteQty,
+        recyclableQty,
+        region,
+        collectionDate: wasteCollection.collectionDate,
+        payment,
+      },
     });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: "Failed to submit waste collection" });
+  }
+};
+
+
+const getAllWasteCollections = async (req, res) => {
+  try {
+    const collections = await WasteCollection.find()
+      .populate('collectorId', 'fullName') // Populate collector's full name
+      .populate('customerId', 'name'); // Populate customer's name
+
+    if (!collections.length) {
+      return res.status(404).json({ message: "No waste collections found" });
+    }
+
+    res.status(200).json(collections);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch waste collections" });
+  }
+};
+
+// Function to calculate payment based on waste collected
+const viewSingleCollectionPayment = async (req, res) => {
+  const { customerId, collectionId } = req.params;
+
+  // Check if both IDs are valid MongoDB ObjectIds
+  if (!mongoose.Types.ObjectId.isValid(customerId) || !mongoose.Types.ObjectId.isValid(collectionId)) {
+    return res.status(400).json({ error: "Invalid customer or collection ID format" });
+  }
+
+  try {
+    // Convert to ObjectId only if valid
+    const customerObjectId = new mongoose.Types.ObjectId(customerId);
+    const collectionObjectId = new mongoose.Types.ObjectId(collectionId);
+
+    // Fetch the waste collection record based on validated IDs
+    const wasteRecord = await WasteCollection.findOne({
+      customerId: customerObjectId,
+      _id: collectionObjectId
+    });
+
+    if (!wasteRecord) {
+      return res.status(404).json({ error: "No waste collection record found for this customer with the specified collection ID" });
+    }
+
+    res.status(200).json({
+      message: "Waste collection payment retrieved successfully",
+      collectionId: wasteRecord._id,
+      collectionDateTime: wasteRecord.collectionDate,
+      wasteQty: wasteRecord.wasteQty,
+      recyclableQty: wasteRecord.recyclableQty,
+      payment: wasteRecord.payment,
+      customerId: wasteRecord.customerId
+    });
+  } catch (error) {
+    console.error("Error retrieving payment:", error);
     res.status(500).json({ error: "Failed to retrieve payment for this collection" });
   }
 };
 
 
+
 // Function to calculate total payment for the user within a specific month
 const calculateMonthlyCollectionDetails = async (req, res) => {
-    const { userId, month, year } = req.params; // Expecting month and year as parameters
-  
-    try {
-      // Start and end dates for the month
-      const startDate = new Date(year, month - 1, 1); // month - 1 because months are 0-indexed
-      const endDate = new Date(year, month, 0); // Get the last day of the month
-  
-      // Fetch all waste collection records for the user within the specified date range
-      const wasteRecords = await WasteCollection.find({
-        customerId: userId,
-        collectionDate: { $gte: startDate, $lt: endDate }
-      });
-  
-      // Check if any waste records were found
-      if (wasteRecords.length === 0) {
-        return res.status(404).json({
-          error: "No waste collection records found for this user in the specified month"
-        });
-      }
-  
-      // Initialize totals
-      let totalWaste = 0;
-      let totalRecyclable = 0;
-      let totalPayment = 0;
-      let totalCollections = wasteRecords.length; // Count of total collections
-  
-      // Map through records to gather required information
-      const collectionDetails = wasteRecords.map(record => {
-        const payment = record.payment; // Already calculated payment
-        totalWaste += record.wasteQty; // Accumulate total waste
-        totalRecyclable += record.recyclableQty; // Accumulate total recyclable waste
-        totalPayment += payment; // Accumulate total payment
-  
-        return {
-          collectionDate: record.collectionDate, // Collection date
-          wasteQty: record.wasteQty, // Waste quantity for this collection
-          recyclableQty: record.recyclableQty, // Recyclable quantity for this collection
-          payment: payment // Payment for this collection
-        };
-      });
-  
-      // Respond with the collection details and totals
-      res.status(200).json({
-        message: "Monthly collection details retrieved successfully",
-        userId,
-        month: month,
-        year: year,
-        totalCollections, // Total number of collections
-        collectionDetails, // Details for each collection
-        totalWaste, // Total waste collected for the month
-        totalRecyclable, // Total recyclable waste collected for the month
-        totalPayment // Total payment for the month
-      });
-    } catch (error) {
-      console.error("Error retrieving monthly collection details:", error);
-      res.status(500).json({
-        error: "Failed to retrieve monthly collection details",
-        details: error.message // Optional: Include error details for debugging
-      });
+  const { userId, month, year } = req.params;
+
+  try {
+    // Convert userId to ObjectId and check validity
+    const customerObjectId = new mongoose.Types.ObjectId(userId);
+
+    // Define start and end dates for the month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+
+    // Fetch waste records for the user within the specified date range
+    const wasteRecords = await WasteCollection.find({
+      customerId: customerObjectId,
+      collectionDate: { $gte: startDate, $lt: endDate }
+    });
+
+    if (wasteRecords.length === 0) {
+      return res.status(404).json({ error: "No waste collection records found for this customer in the specified month" });
     }
-  };
+
+    // Calculate totals
+    let totalWaste = 0;
+    let totalRecyclable = 0;
+    let totalPayment = 0;
+    const collectionDetails = wasteRecords.map(record => {
+      totalWaste += record.wasteQty;
+      totalRecyclable += record.recyclableQty;
+      totalPayment += record.payment;
+
+      return {
+        collectionDate: record.collectionDate,
+        wasteQty: record.wasteQty,
+        recyclableQty: record.recyclableQty,
+        payment: record.payment
+      };
+    });
+
+    // Respond with collection details and totals
+    res.status(200).json({
+      message: "Monthly collection details retrieved successfully",
+      userId,
+      month,
+      year,
+      totalCollections: wasteRecords.length,
+      collectionDetails,
+      totalWaste,
+      totalRecyclable,
+      totalPayment
+    });
+  } catch (error) {
+    console.error("Error retrieving monthly collection details:", error);
+    res.status(500).json({
+      error: "Failed to retrieve monthly collection details",
+      details: error.message
+    });
+  }
+};
   
 
 //  REPORT SECTION

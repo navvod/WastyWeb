@@ -10,7 +10,7 @@ router.post("/submitWaste", submitWasteCollection);
 router.get('/collection/all', getAllWasteCollections); // Route for getting all collections
 
 // Admin route to calculate payment for a user
-router.get("/payment/viewSingleCollectionPayment/:userId/:collectionId", viewSingleCollectionPayment);
+router.get("/payment/viewSingleCollectionPayment/:customerId/:collectionId", viewSingleCollectionPayment);
 
 
 router.get('/payment/calculate-monthly-payment/:userId/:month/:year', calculateMonthlyCollectionDetails);

@@ -6,20 +6,25 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faFilePdf } from '@fortawesome/free-solid-svg-icons';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import 'react-toastify/dist/ReactToastify.css';
+import AdminSidebar from '../../components/AdminSidebar';
 
 function HighWasteAreasReportPage() {
   const [reportData, setReportData] = useState([]);
   const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate('/reports/ReportHome'); // Navigate back to the report home page
+    navigate('/reports/ReportHome');
   };
 
   const fetchHighWasteAreasReport = async () => {
     try {
       const response = await axios.get('http://localhost:9500/waste/wasteCollection/highWasteAreasReport');
       setReportData(response.data);
-      toast.success('High waste areas report generated successfully!');
+      if (response.data.length > 0) {
+      } else {
+        toast.warn('No data available for high waste areas.');
+      }
     } catch (error) {
       console.error("Error:", error.response?.data?.error || error.message);
       toast.error('Failed to generate high waste areas report!');
@@ -40,7 +45,6 @@ function HighWasteAreasReportPage() {
     doc.setFontSize(18);
     doc.text('High Waste Areas Report', 14, 20);
 
-    // Create an auto table for the report data
     const tableData = reportData.map(item => ({
       region: item._id,
       totalWaste: item.totalWaste,
@@ -52,44 +56,55 @@ function HighWasteAreasReportPage() {
       startY: 30,
     });
 
-    // Save the PDF
     doc.save('High_Waste_Areas_Report.pdf');
     toast.success('PDF report is downloading!');
   };
 
   return (
-    <div className="container-fluid">
-      <div className="row">
-        <div className="col-md-10">
-          <h2 className="text-center">High Waste Areas Report</h2>
-          <button className="btn btn-secondary mb-3" onClick={handleBack}>
-            <FontAwesomeIcon icon={faArrowLeft} /> Back to Reports Home
-          </button>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <div style={{ width: '250px', flexShrink: 0, backgroundColor: '#f8f9fa' }}>
+        <AdminSidebar />
+      </div>
 
-          <button className="btn btn-danger mb-3" onClick={handleDownloadPDF}>
+      <div style={{ flexGrow: 1, padding: '100px 20px 20px', backgroundColor: '#ffffff' }}>
+        <div className="flex items-center justify-between gap-8 mb-8">
+          <div>
+            <h5 className="block font-sans text-xl antialiased font-semibold leading-snug tracking-normal text-blue-gray-900">
+              High Waste Areas Report
+            </h5>
+            <p className="block mt-1 font-sans text-base antialiased font-normal leading-relaxed text-gray-700">
+              Overview of regions with the highest waste accumulation
+            </p>
+          </div>
+
+          <button
+            onClick={handleDownloadPDF}
+            className="select-none rounded-lg border border-gray-900 py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-gray-900 transition-all hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85]"
+          >
             <FontAwesomeIcon icon={faFilePdf} /> Download PDF
           </button>
+        </div>
 
-          <h4>Report Summary</h4>
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
           {reportData.length > 0 ? (
-            <table className="table table-bordered">
-              <thead>
+            <table className="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th>Region</th>
-                  <th>Total Waste (kg)</th>
+                  <th className="whitespace-nowrap text-left px-4 py-2 font-medium text-gray-900">Region</th>
+                  <th className="whitespace-nowrap text-left px-4 py-2 font-medium text-gray-900">Total Waste (kg)</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-200">
                 {reportData.map((item) => (
                   <tr key={item._id}>
-                    <td>{item._id}</td>
-                    <td>{item.totalWaste} kg</td>
+                    <td className="whitespace-nowrap px-4 py-2 text-gray-700">{item._id}</td>
+                    <td className="whitespace-nowrap px-4 py-2 text-gray-700">{item.totalWaste} kg</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : (
-            <p>No data available for high waste areas.</p>
+            <p className="text-gray-700 mt-4">No data available for high waste areas.</p>
           )}
         </div>
       </div>

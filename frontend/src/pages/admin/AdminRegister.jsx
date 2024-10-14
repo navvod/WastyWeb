@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
-import { ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import AdminSidebar from '../../components/AdminSidebar'; // Adjust the path as necessary
 
 const initialState = {
   fullName: "",
@@ -26,19 +27,14 @@ function AdminRegister() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return; // Validate form before submission
+    if (!validateForm()) return;
     try {
-      const response = await axios.post(
-        "http://localhost:9500/user/register-admin",
-        formData
-      );
-      console.log(response.data);
+      await axios.post("http://localhost:9500/user/register-admin", formData);
       toast.success("Admin registered successfully!");
-      alert("Admin registered successfully!");
       setFormData(initialState);
       navigate("/user/allAdmins");
     } catch (error) {
-      console.error("Error:", error.response.data.error);
+      console.error("Error:", error.response?.data?.error);
       toast.error("Failed to register admin");
     }
   };
@@ -64,97 +60,81 @@ function AdminRegister() {
     return true;
   };
 
+  const handleBack = () => {
+    navigate(-1); // Navigates back to the previous page
+  };
+
   return (
-    <div className="container d-flex align-items-center justify-content-center vh-100">
-      <div className="row justify-content-center">
-        <div className="col-md-14">
-          <div className="card shadow-lg p-3 mb-5 bg-body rounded">
-            <div className="card-body">
-              <h2 className="card-title text-center mb-4">
-                Admin Registration
-              </h2>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label htmlFor="fullName" className="form-label">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="fullName"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="contactNumber" className="form-label">
-                    Contact Number
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="contactNumber"
-                    name="contactNumber"
-                    value={formData.contactNumber}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="username" className="form-label">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="username"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="email" className="form-label">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="password" className="form-label">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="d-grid">
-                  <button type="submit" className="btn btn-primary">
-                    Register
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Admin Sidebar */}
+      <div style={{ width: '250px', flexShrink: 0, backgroundColor: '#f8f9fa' }}>
+        <AdminSidebar />
       </div>
-      <ToastContainer />
+
+      {/* Main Content Area */}
+      <div style={{ flexGrow: 1, padding: '50px 20px', marginLeft: '20px', backgroundColor: '#ffffff' }}>
+        <button
+          onClick={handleBack}
+          className="mb-4 px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-black rounded-sm"
+        >
+          Back
+        </button>
+        <h1 className="text-2xl font-semibold text-[#333] mb-4">Admin Registration</h1>
+        <form onSubmit={handleSubmit} className="space-y-4 font-[sans-serif] text-[#333]">
+          <input
+            type="text"
+            placeholder="Full Name"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            className="px-4 py-3 bg-gray-100 focus:bg-transparent w-full text-sm outline-[#333] rounded-sm transition-all"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Contact Number"
+            name="contactNumber"
+            value={formData.contactNumber}
+            onChange={handleChange}
+            className="px-4 py-3 bg-gray-100 focus:bg-transparent w-full text-sm outline-[#333] rounded-sm transition-all"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            className="px-4 py-3 bg-gray-100 focus:bg-transparent w-full text-sm outline-[#333] rounded-sm transition-all"
+            required
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="px-4 py-3 bg-gray-100 focus:bg-transparent w-full text-sm outline-[#333] rounded-sm transition-all"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            className="px-4 py-3 bg-gray-100 focus:bg-transparent w-full text-sm outline-[#333] rounded-sm transition-all"
+            required
+          />
+          <button
+            type="submit"
+            className="mt-4 px-6 py-2.5 text-sm bg-[#333] hover:bg-[#222] text-white rounded-sm"
+          >
+            Register
+          </button>
+        </form>
+        <ToastContainer />
+      </div>
     </div>
   );
 }

@@ -3,31 +3,52 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-
-import { toast } from "react-toastify";
-import { ToastContainer } from "react-toastify";
+import Modal from "react-modal";
+import { toast, ToastContainer } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faEdit,
-  faTrashAlt,
-  faPlus,
-  faFilePdf,
-} from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faTrashAlt, faPlus, faFilePdf } from "@fortawesome/free-solid-svg-icons";
+import AdminSidebar from "../../components/AdminSidebar";
 
-// import "./styles.css"; // Importing the CSS file
-// import Sidebar from "./SideBar"; // Import the Sidebar component
+// Custom styles for the modal
+const customModalStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    width: '400px',
+    padding: '20px',
+    borderRadius: '10px',
+    border: '1px solid #ccc',
+  },
+  overlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+  },
+};
+
+Modal.setAppElement("#root");
 
 function CollectorList() {
   const [collectors, setCollectors] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const navigate = useNavigate();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentCollector, setCurrentCollector] = useState(null);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    contactNumber: "",
+    username: "",
+    collectorType: "",
+    email: "",
+    password: "",
+  });
 
   useEffect(() => {
     const fetchCollectors = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:9500/user/allCollectors"
-        );
+        const response = await axios.get("http://localhost:9500/user/allCollectors");
         setCollectors(response.data);
       } catch (error) {
         console.error("Error:", error.response.data.error);
@@ -36,37 +57,80 @@ function CollectorList() {
     fetchCollectors();
   }, []);
 
-  const handleEdit = (id) => {
-    navigate(`/user/update-collector/${id}`);
+  const openAddModal = () => {
+    setFormData({
+      fullName: "",
+      contactNumber: "",
+      username: "",
+      email: "",
+      password: "",
+    });
+    setIsAddModalOpen(true);
   };
+
+  const openEditModal = (collector) => {
+    setCurrentCollector(collector);
+    setFormData({
+      fullName: collector.fullName,
+      contactNumber: collector.contactNumber,
+      username: collector.username,
+      email: collector.email,
+      password: "",  // Allow user to optionally set a new password on edit
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const closeModals = () => {
+    setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
+  };
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleAddCollector = async () => {
+    try {
+      await axios.post("http://localhost:9500/user/register-collecter", formData);
+      setCollectors([...collectors, formData]);
+      toast.success("Collector added successfully!");
+      closeModals();
+    } catch (error) {
+      console.error("Error:", error.response.data.error);
+      toast.error("Failed to add collector.");
+    }
+  };
+
+  const handleEditCollector = async () => {
+    try {
+      console.log("Editing Collector with ID:", currentCollector._id); // Log ID to ensure it's correct
+      await axios.put(
+        `http://localhost:9500/user/update-manager/${currentCollector._id}`,
+        formData
+      );
+      // Continue with updating state and closing modal
+      toast.success("Collector updated successfully!");
+      closeModals();
+    } catch (error) {
+      console.error("Error updating collector:", error.response?.data || error.message);
+      toast.error(error.response?.data?.error || "Failed to update collector.");
+    }
+  };
+  
 
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:9500/user/delete/${id}`);
-      setCollectors(collectors.filter((collector) => collector.Id !== id));
-      console.log("Collector deleted successfully!");
+      setCollectors(collectors.filter((collector) => collector._id !== id));
       toast.success("Collector deleted successfully!");
     } catch (error) {
       console.error("Error:", error.response.data.error);
+      toast.error("Failed to delete collector.");
     }
-  };
-
-  const handleClickNewCollector = () => {
-    navigate("/user/register-collector");
-  };
-
-  const handleClickBackHome = () => {
-    navigate("/AdminHome");
-  };
-
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
   };
 
   const handleDownloadPDF = () => {
     const input = document.getElementById("collector-table");
-
-    // Hide action buttons
     const actionButtons = document.querySelectorAll(".action-button");
     actionButtons.forEach((button) => {
       button.style.display = "none";
@@ -91,16 +155,10 @@ function CollectorList() {
         heightLeft -= pageHeight;
       }
 
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split("T")[0];
-      const formattedTime = currentDate.toLocaleTimeString().replace(/:/g, "-");
-
-      const filename = `Collector_List_Report_${formattedDate}_${formattedTime}.pdf`;
-
+      const filename = `Collector_List_Report_${new Date().toISOString()}.pdf`;
       pdf.save(filename);
       toast.success("Report is downloading!");
 
-      // Show action buttons again
       actionButtons.forEach((button) => {
         button.style.display = "inline-block";
       });
@@ -116,79 +174,104 @@ function CollectorList() {
   );
 
   return (
-    <div className="container-fluid">
-      <div className="row">
-        
-        <div className="col-md-9">
-          <h2 className="text-center">Collectors List</h2>
-          <div className="search-container">
-            <input
-              type="text"
-              className="form-control search-input"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={handleSearch}
-            />
+    <div style={{ display: "flex", minHeight: "100vh" }}>
+      <div style={{ width: "250px", flexShrink: 0, backgroundColor: "#f8f9fa" }}>
+        <AdminSidebar />
+      </div>
+      <div style={{ flexGrow: 1, padding: "100px 20px 20px", backgroundColor: "#ffffff" }}>
+        <div className="flex items-center justify-between gap-8 mb-8">
+          <div>
+            <h5 className="block font-sans text-xl font-semibold text-blue-gray-900">
+              Collectors List
+            </h5>
+            <p className="block mt-1 text-base text-gray-700">
+              See information about all collectors
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
             <button
-              className="btn btn-secondary me-2"
-              type="button"
-              onClick={handleClickNewCollector}
+              className="select-none rounded-lg border border-gray-900 py-2 px-4 font-sans text-xs font-bold uppercase text-gray-900 transition-all hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85]"
+              onClick={openAddModal}
             >
-              <FontAwesomeIcon icon={faPlus} /> Add new Collector
+              <FontAwesomeIcon icon={faPlus} className="w-4 h-4" /> Add Collector
             </button>
             <button
-              className="btn btn-primary me-2"
-              type="button"
+              className="select-none rounded-lg border border-gray-900 py-2 px-4 font-sans text-xs font-bold uppercase text-gray-900 transition-all hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85]"
               onClick={handleDownloadPDF}
             >
-              <FontAwesomeIcon icon={faFilePdf} /> Download PDF
+              <FontAwesomeIcon icon={faFilePdf} className="w-4 h-4" /> Download PDF
             </button>
           </div>
-          <table id="collector-table" className="table table-striped">
+        </div>
+
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table id="collector-table" className="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
             <thead>
               <tr>
-                <th>Collector ID</th>
-                <th>Full Name</th>
-                <th>Contact Number</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Actions</th>
+                <th className="whitespace-nowrap text-left px-4 py-2 font-medium text-gray-900">Collector ID</th>
+                <th className="whitespace-nowrap text-left px-4 py-2 font-medium text-gray-900">Full Name</th>
+                <th className="whitespace-nowrap text-left px-4 py-2 font-medium text-gray-900">Contact Number</th>
+                <th className="whitespace-nowrap text-left px-4 py-2 font-medium text-gray-900">Username</th>
+                <th className="whitespace-nowrap text-left px-4 py-2 font-medium text-gray-900">Email</th>
+                <th className="whitespace-nowrap text-left px-4 py-2 font-medium text-gray-900">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {filteredCollectors.map((collector) => (
-                <tr key={collector.Id}>
-                  <td>{collector.Id}</td>
-                  <td>{collector.fullName}</td>
-                  <td>{collector.contactNumber}</td>
-                  <td>{collector.username}</td>
-                  <td>{collector.email}</td>
-                  <td>
+                <tr key={collector._id}>
+                  <td className="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{collector._id}</td>
+                  <td className="whitespace-nowrap px-4 py-2 text-gray-700">{collector.fullName}</td>
+                  <td className="whitespace-nowrap px-4 py-2 text-gray-700">{collector.contactNumber}</td>
+                  <td className="whitespace-nowrap px-4 py-2 text-gray-700">{collector.username}</td>
+                  <td className="whitespace-nowrap px-4 py-2 text-gray-700">{collector.email}</td>
+                  <td className="py-3 px-4">
                     <button
-                      className="btn btn-success me-1 action-button"
-                      onClick={() => handleEdit(collector.Id)}
+                      className="inline-block p-3 text-gray-700 hover:bg-gray-50 focus:relative"
+                      title="Edit Collector"
+                      onClick={() => openEditModal(collector)}
                     >
-                      <FontAwesomeIcon icon={faEdit} /> Edit
+                      <FontAwesomeIcon icon={faEdit} />
                     </button>
                     <button
-                      className="btn btn-danger action-button"
-                      onClick={() => handleDelete(collector.Id)}
+                      className="inline-block p-3 text-gray-700 hover:bg-gray-50 focus:relative"
+                      title="Delete Collector"
+                      onClick={() => handleDelete(collector._id)}
                     >
-                      <FontAwesomeIcon icon={faTrashAlt} /> Delete
+                      <FontAwesomeIcon icon={faTrashAlt} />
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <button
-            className="btn btn-primary float-end"
-            onClick={handleClickBackHome}
-          >
-            Back to Home
-          </button>
         </div>
       </div>
+
+      {/* Add Collector Modal */}
+      <Modal isOpen={isAddModalOpen} onRequestClose={closeModals} style={customModalStyles}>
+        <h2 className="text-xl font-semibold mb-4">Add Collector</h2>
+        <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleInputChange} />
+        <input type="text" name="contactNumber" placeholder="Contact Number" value={formData.contactNumber} onChange={handleInputChange} />
+        <input type="text" name="username" placeholder="Username" value={formData.username} onChange={handleInputChange} />
+        <input type="text" name="email" placeholder="Email" value={formData.email} onChange={handleInputChange} />
+        <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleInputChange} />
+        <button onClick={handleAddCollector} className="rounded-lg bg-gray-900 py-2 px-4 font-sans text-xs font-bold uppercase text-white shadow-md transition-all hover:shadow-lg focus:opacity-[0.85]">Save</button>
+        <button onClick={closeModals} className="ml-2 rounded-lg bg-red-600 py-2 px-4 font-sans text-xs font-bold uppercase text-white shadow-md transition-all hover:shadow-lg focus:opacity-[0.85]">Cancel</button>
+      </Modal>
+
+      {/* Edit Collector Modal */}
+      <Modal isOpen={isEditModalOpen} onRequestClose={closeModals} style={customModalStyles}>
+        <h2 className="text-xl font-semibold mb-4">Edit Collector</h2>
+        <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleInputChange} />
+        <input type="text" name="contactNumber" placeholder="Contact Number" value={formData.contactNumber} onChange={handleInputChange} />
+        <input type="text" name="username" placeholder="Username" value={formData.username} onChange={handleInputChange} />
+        
+        <input type="text" name="email" placeholder="Email" value={formData.email} onChange={handleInputChange} />
+        <input type="password" name="password" placeholder="Password (leave blank to keep current)" value={formData.password} onChange={handleInputChange} />
+        <button onClick={handleEditCollector} className="rounded-lg bg-gray-900 py-2 px-4 font-sans text-xs font-bold uppercase text-white shadow-md transition-all hover:shadow-lg focus:opacity-[0.85]">Update</button>
+        <button onClick={closeModals} className="ml-2 rounded-lg bg-red-600 py-2 px-4 font-sans text-xs font-bold uppercase text-white shadow-md transition-all hover:shadow-lg focus:opacity-[0.85]">Cancel</button>
+      </Modal>
+
       <ToastContainer />
     </div>
   );

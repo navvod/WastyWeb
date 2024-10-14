@@ -3,9 +3,9 @@ const mongoose = require("mongoose");
 
 const wasteCollectionSchema = new mongoose.Schema(
   {
-    userId: {
+    customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Customer",
       required: true,
     },
     collectorId: {
@@ -28,10 +28,6 @@ const wasteCollectionSchema = new mongoose.Schema(
     collectionDate: {
       type: Date,
       default: Date.now,
-    },
-    customerId: { // Field to store the custom customer ID
-      type: String,
-      required: true,
     },
     payment: {
         type: Number, // Store the calculated payment for this collection
