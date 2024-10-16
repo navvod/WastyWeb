@@ -7,6 +7,9 @@ import Test from "./components/test"
 
 //Admin and collector
 import AdminRegister from "./pages/admin/AdminRegister";
+import LoginPage from "./pages/admin/LoginPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import CollectorDashboard from "./pages/collector/CollectorDashboard"
 import AdminList from "./pages/admin/AdminList";
 import EditAdmin from "./pages/admin/EditAdmin";
 import CollectorRegister from "./pages/collector/CollectorRegister";
@@ -15,7 +18,8 @@ import EditCollector from "./pages/collector/EditCollector";
 import Sidebar from "./components/AdminSidebar";
 import CustomerList from './pages/admin/CustomerList'
 import CustomerApproval from './pages/admin/CustomerApproval'
-
+import CollectorAssignedRoutes from './pages/collector/CollectorAssignedRoutes' 
+import WasteCollectionForm from './pages/collector/WasteCollectionForm'
 
 //RouteManagement
 import AddRoute from "./pages/routeManagement/AddRoute";
@@ -35,13 +39,17 @@ import MonthlyPayment from "./pages/payment/MonthlyPayment"
 import ReportHome from "./pages/report/ReportHome";
 import CollectionReport from "./pages/report/CollectionReportPage";
 import HighWasteReport from "./pages/report/HighWasteAreasReportPage";
-import RecyclingReport from "./pages/report/RecyclingRateReportPage"
+import RecyclingReport from "./pages/report/RecyclingRateReportPage";
 
 //Customer
 import CustomerRegister from "./pages/customer/Registration";
 import CustomerLogin from './pages/customer/Login';
 import CustomerDashboard from './pages/customer/Dashboard';
-import CustSide from './components/customer/sucsidebar'
+import SpecialCollectionForm from './pages/customer/special_collection/SpecialCollectionRequestForm';
+import SpecialCollectionList from './pages/customer/special_collection/SpecialCollectionList';
+import EditSpecialCollectionRequest from './pages/customer/special_collection/EditSpecialCollectionRequest';
+import CustomerPaymentPage from './pages/customer/CustomerPaymentPage';
+import CollectionDetailsPage from './pages/customer/CollectionDetailsPage';
 
 
 import Charts from "./pages/charts/ChartsPage"
@@ -70,7 +78,18 @@ function App() {
 
       <Route path="/user/customers" element={<CustomerList />}/>
       <Route path="/user/customer-approval" element={<CustomerApproval />} />
+      <Route path="/user/login" element={<LoginPage />} />
+      <Route path="/user/overview" element={<AdminDashboard />} />
+      <Route path="/collector/dashboard" element={<CollectorDashboard />} />
+      <Route path="/collector/assigned-routes" element={<CollectorAssignedRoutes />} /> 
+      <Route path="/collector/waste-collection-form" element={<WasteCollectionForm />} />  
 
+
+
+      
+
+
+      
 
 
 
@@ -111,9 +130,15 @@ function App() {
     <Route path="/customer/register" element={<CustomerRegister />}/>
     <Route path="/customer/login" element={<CustomerLogin />}/>
     <Route path="/customer/dashboard" element={<CustomerDashboard />}/>
-    
-    <Route path="/customer/CustSide" element={<CustSide />}/>
+    <Route path="/customer/special_request" element={<SpecialCollectionForm />}/>
+    <Route path="/customer/special_request_list" element={<SpecialCollectionList />}/>
+    <Route path="/customer/special-request/edit/:id" element={<EditSpecialCollectionRequest />} /> 
+    <Route path="/customer/payment" element={<CustomerPaymentPage />}/> 
+    <Route path="/customer/collections" element={<CollectionDetailsPage />}/> 
 
+
+
+    
 
 
 

@@ -1,6 +1,6 @@
 
 const express = require("express");
-const {getAllWasteCollections,getRecyclableVsNonRecyclableWaste, getWasteCollectedByRegion ,getWasteCollectedOverTime ,generateRecyclingRateReport ,submitWasteCollection, viewSingleCollectionPayment, calculateMonthlyCollectionDetails,generateCollectionReport,generateHighWasteAreasReport } = require("../controllers/wasteCollectionController.js");
+const {getAllWasteCollections,getRecyclableVsNonRecyclableWaste, getWasteCollectedByRegion ,getWasteCollectedOverTime ,generateRecyclingRateReport ,submitWasteCollection, viewSingleCollectionPayment, calculateMonthlyCollectionDetails,generateCollectionReport,generateHighWasteAreasReport,getAllCollectionsForCustomer,calculateTotalAmountAndPaybacks } = require("../controllers/wasteCollectionController.js");
 
 const router = express.Router();
 
@@ -33,5 +33,11 @@ router.get('/wasteCollection/byRegion', getWasteCollectedByRegion);
 
 // Define the route to fetch recyclable vs non-recyclable waste
 router.get("/wasteCollection/recyclableVsNonRecyclable", getRecyclableVsNonRecyclableWaste);
+
+// Get all waste collections for a specific customer
+router.get('/:customerId/collections', getAllCollectionsForCustomer);
+
+// Calculate total payment and paybacks for recycled waste for a specific customer
+router.get('/:customerId/payments', calculateTotalAmountAndPaybacks);
 
 module.exports = router;

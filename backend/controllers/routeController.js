@@ -225,7 +225,24 @@ const getAllAssignedRoutes = expressAsyncHandler(async (req, res) => {
   }
 });
 
+// Get routes assigned to the specific collector
+const getCollectorAssignedRoutes = expressAsyncHandler(async (req, res) => {
+  const { collectorId } = req.params; // collectorId will be passed as a URL parameter
 
+  try {
+    const routes = await Route.find({ collectorId: collectorId }) // Find routes assigned to this collector
+      .select("routeId routeName startingPoint endingPoint"); // Select fields to return
+
+    if (!routes.length) {
+      return res.status(404).json({ message: "No routes assigned to this collector" });
+    }
+
+    res.status(200).json(routes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch routes assigned to collector" });
+  }
+});
 
 
 
@@ -240,4 +257,6 @@ module.exports = {
   getAssignedCollectorForRoute,
   deleteCollectorFromRoute,
   getAllAssignedRoutes,
+  getCollectorAssignedRoutes,
+
 };

@@ -36,6 +36,9 @@ app.use("/user", require("./routes/userRoutes.js"));
 app.use("/customer", require("./routes/customerRoutes.js"));
 app.use("/route", require("./routes/routeRoutes.js"));
 app.use("/waste", require("./routes/wasteCollectionRoutes.js"));
+app.use("/special-collections", require("./routes/specialCollectionRoutes"));
+
+
 
 // Cloudinary Upload Route
 app.post("/upload", async (req, res) => {

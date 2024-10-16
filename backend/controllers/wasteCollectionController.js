@@ -4,7 +4,6 @@ const User = require("../models/userModel.js");
 const Customer = require("../models/customerModel.js");
 const mongoose = require("mongoose");
 
-
 // Function to submit waste collection
 const submitWasteCollection = async (req, res) => {
   const { customerId, collectorId, wasteQty, recyclableQty, region } = req.body;
@@ -14,7 +13,12 @@ const submitWasteCollection = async (req, res) => {
       return res.status(400).json({ error: "Please include all required fields" });
     }
 
-    const customer = await Customer.findById(customerId);
+    console.log(`Customer ID: ${customerId}`);
+
+    // Convert customerId to ObjectId with 'new' keyword
+    const customerObjectId = new mongoose.Types.ObjectId(customerId);
+
+    const customer = await Customer.findById(customerObjectId);
     if (!customer) {
       return res.status(404).json({ error: "Customer not found" });
     }
@@ -455,6 +459,72 @@ const getRecyclableVsNonRecyclableWaste = async (req, res) => {
       res.status(500).json({ error: "Failed to fetch waste data" });
     }
   };
+
+  // Function to get all waste collections for a specific customer
+const getAllCollectionsForCustomer = async (req, res) => {
+  const { customerId } = req.params;
+
+  try {
+    const customerObjectId = new mongoose.Types.ObjectId(customerId);
+
+    // Find all waste collections for the specified customer
+    const collections = await WasteCollection.find({ customerId: customerObjectId })
+      .populate('collectorId', 'fullName')  // Populate collector's name
+      .populate('customerId', 'name');  // Populate customer's name
+
+    if (!collections.length) {
+      return res.status(404).json({ message: "No waste collections found for this customer" });
+    }
+
+    res.status(200).json({ collections });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch waste collections for this customer" });
+  }
+};
+
+// Function to calculate total payment and paybacks for recycled waste for a specific customer
+const calculateTotalAmountAndPaybacks = async (req, res) => {
+  const { customerId } = req.params;
+
+  try {
+    const customerObjectId = new mongoose.Types.ObjectId(customerId);
+
+    // Fetch all collections for the customer
+    const collections = await WasteCollection.find({ customerId: customerObjectId });
+
+    if (!collections.length) {
+      return res.status(404).json({ message: "No waste collections found for this customer" });
+    }
+
+    // Rates for non-recyclable and recyclable waste
+    const nonRecyclableRate = 5;
+    const recyclableRate = 10;
+
+    let totalAmount = 0;
+    let totalPayback = 0;
+
+    // Calculate total payment and payback for recycled waste
+    collections.forEach((collection) => {
+      const payment = (collection.wasteQty * nonRecyclableRate) + (collection.recyclableQty * recyclableRate);
+      const payback = collection.recyclableQty * recyclableRate;
+
+      totalAmount += payment;
+      totalPayback += payback;
+    });
+
+    res.status(200).json({
+      customerId,
+      totalAmount,
+      totalPayback,
+      message: "Calculated total amount and paybacks for recycled waste successfully"
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to calculate total amount and paybacks" });
+  }
+};
+
   
   
   
@@ -469,4 +539,7 @@ module.exports = {
   getWasteCollectedOverTime,
   getWasteCollectedByRegion,
   getRecyclableVsNonRecyclableWaste,
+  getAllCollectionsForCustomer,
+  calculateTotalAmountAndPaybacks
+
 };

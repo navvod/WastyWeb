@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import AccountInfo from '../../components/customer/AccountInfo';
 import AddressInfo from '../../components/customer/AddressInfo';
 import Verification from '../../components/customer/Verification';
+import Logo from '../../images/logo.png'
 import axios from 'axios';
 
 function Registration() {
-  const navigate = useNavigate();  // Initialize navigate
-
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
@@ -39,7 +39,6 @@ function Registration() {
 
   const handleSubmit = () => {
     const form = new FormData();
-    
     form.append('name', formData.name);
     form.append('email', formData.email);
     form.append('phone', formData.phone);
@@ -51,11 +50,6 @@ function Registration() {
     
     form.append('nicIdImage', formData.nicIdImage);
     form.append('addressVerificationDoc', formData.addressVerificationDoc);
-    
-    // Log FormData content for debugging
-    for (let pair of form.entries()) {
-      console.log(`${pair[0]}: ${pair[1]}`);
-    }
   
     axios.post('http://localhost:9500/customer/register', form, {
       headers: {
@@ -65,7 +59,7 @@ function Registration() {
     .then((response) => {
       console.log(response.data);
       alert('Registration successful');
-      navigate('/customer/login');  // Redirect to login page upon success
+      navigate('/customer/login');
     })
     .catch((error) => {
       console.error("Error submitting form:", error);
@@ -87,22 +81,94 @@ function Registration() {
   };
 
   return (
-    <div>
-      {/* Stepper Component */}
-      <ol className="flex items-center w-full text-sm font-medium text-center text-gray-500 dark:text-gray-400 sm:text-base">
-        <li className={`flex md:w-full items-center ${step >= 1 ? 'text-blue-600 dark:text-blue-500' : ''}`}>
-          <span className="flex items-center">1 Account Info</span>
-        </li>
-        <li className={`flex md:w-full items-center ${step >= 2 ? 'text-blue-600 dark:text-blue-500' : ''}`}>
-          <span className="flex items-center">2 Address Info</span>
-        </li>
-        <li className={`flex items-center ${step === 3 ? 'text-blue-600 dark:text-blue-500' : ''}`}>
-          <span className="flex items-center">3 Verification</span>
-        </li>
-      </ol>
+    <div className="max-w-lg mx-auto p-6 bg-white shadow-lg rounded-md mt-10">
+      <div>
+
+        {/* Logo */}
+      <img src={Logo} alt="Logo" className="w-52 mb-4" />
+
+{/* Title and Description */}
+<h1 className="text-2xl font-semibold text-gray-800 mb-1">Registration</h1>
+<p className="text-gray-600 mb-6">Please complete all steps to create your account</p>
+        <h2 className="sr-only">Steps</h2>
+
+        <div>
+          <div className="overflow-hidden rounded-full bg-gray-200">
+            {/* Progress Bar - Adjust width based on step */}
+            <div
+  className="h-2 rounded-full bg-black"
+  style={{ width: `${((step - 1) / 2) * 100}%` }}
+></div>
+
+          </div>
+
+          <ol className="mt-4 grid grid-cols-3 text-sm font-medium text-gray-500">
+            <li className={`flex items-center justify-start ${step >= 1 ? 'text-black' : ''}`}>
+              <span className="hidden sm:inline"> Account Info </span>
+              <svg
+                className="ml-2 size-6 sm:size-5"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+                />
+              </svg>
+            </li>
+
+            <li className={`flex items-center justify-center ${step >= 2 ? 'text-black' : ''}`}>
+              <span className="hidden sm:inline"> Address Info </span>
+              <svg
+                className="ml-2 size-6 sm:size-5"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </li>
+
+            <li className={`flex items-center justify-end ${step >= 3 ? 'text-black' : ''}`}>
+              <span className="hidden sm:inline"> Verification </span>
+              <svg
+                className="ml-2 size-6 sm:size-5"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
+            </li>
+          </ol>
+        </div>
+      </div>
 
       {/* Render Step Components */}
-      {renderStep()}
+      <div className="mt-8">
+        {renderStep()}
+      </div>
     </div>
   );
 }

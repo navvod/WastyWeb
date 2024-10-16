@@ -1,28 +1,26 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Logo from '../../images/logo.png'
+
 
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate(); // Hook to handle navigation
+  const navigate = useNavigate();
 
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
       const response = await axios.post('/customer/login', { email, password });
-
-      // Assuming successful login returns a token
-      const { token } = response.data;
-
-      // Store the token (in localStorage or a state management solution)
+      const { token, customerId } = response.data;
       localStorage.setItem('token', token);
+      localStorage.setItem('customerId', customerId); // Store customer ID
+      
 
-      // Navigate to the dashboard after successful login
       navigate('/customer/dashboard');
     } catch (err) {
-      // Handle error and display message to the user
       setError(err.response?.data?.error || 'Login failed');
     }
   };
@@ -30,10 +28,15 @@ function LoginForm() {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <form onSubmit={handleLogin} className="bg-white p-8 rounded shadow-md w-full max-w-sm">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Login</h2>
+        {/* Logo */}
+        <div className="flex">
+        <img src={Logo} alt="Logo" className="w-52 mb-4" />
+        </div>
+
+        <h2 className="text-2xl font-semibold text-gray-800 mb-1">Login</h2>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        
-        <div className="mb-4">
+
+        <div className="mb-4 space-y-1">
           <label className="block text-gray-700">Email</label>
           <input
             type="email"
@@ -43,8 +46,8 @@ function LoginForm() {
             required
           />
         </div>
-        
-        <div className="mb-6">
+
+        <div className="mb-6 space-y-1">
           <label className="block text-gray-700">Password</label>
           <input
             type="password"
@@ -54,8 +57,8 @@ function LoginForm() {
             required
           />
         </div>
-        
-        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+
+        <button type="submit" className="w-full py-2 px-4 text-white bg-black rounded-lg hover:bg-gray-800 transition">
           Login
         </button>
       </form>
